@@ -1,0 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-filesearch"
+version = "0.1.0"
+description = "A file-search MCP server — search by name, content, extension, or modification time"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp",
+    "markitdown",
+    "markitdown-pdf-pages @ file:///Users/sc/dev/tractebel-gpt/packages/backend/sfn/document-ingestion/markdown-parser",
+    "langchain-text-splitters",
+    "sentence-transformers",
+    "faiss-cpu",
+]
