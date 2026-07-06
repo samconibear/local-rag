@@ -4,6 +4,7 @@ from pathlib import Path
 
 from markitdown import MarkItDown
 from markitdown_pdf_pages import PdfConverterWithPage
+# markitdown plugin from: https://github.com/samconibear/markitdown-pdf-pages
 
 from rag.models import ParsedChunk
 

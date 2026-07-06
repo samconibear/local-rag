@@ -8,8 +8,15 @@ from ._base import BaseParser
 class ParserRegistry:
     def __init__(self) -> None:
         self._parsers: list[BaseParser] = [
-            cls() for cls in _all_subclasses(BaseParser)
+            cls() for cls in self._all_subclasses()
         ]
+    
+    def _all_subclasses(self) -> list[type]:
+        result = []
+        for sub_class in BaseParser.__subclasses__():
+            result.append(sub_class)
+            result.extend(self._all_subclasses(sub_class))
+        return result
 
     def get_parser(self, path: Path) -> BaseParser | None:
         for parser in self._parsers:
@@ -18,12 +25,7 @@ class ParserRegistry:
         return None
 
 
-def _all_subclasses(cls: type) -> list[type]:
-    result = []
-    for sub in cls.__subclasses__():
-        result.append(sub)
-        result.extend(_all_subclasses(sub))
-    return result
+
 
 
 registry = ParserRegistry()
