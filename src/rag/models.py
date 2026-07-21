@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class ParsedChunk:
+class ParsedChunk(BaseModel):
     text: str
     source_path: str
     page_number: int | None
@@ -12,8 +11,7 @@ class ParsedChunk:
     section_title: str | None
 
 
-@dataclass
-class EmbeddingChunk:
+class EmbeddingChunk(BaseModel):
     text: str
     source_path: str
     page_number: int | None
@@ -21,8 +19,7 @@ class EmbeddingChunk:
     section_title: str | None
 
 
-@dataclass
-class SearchResult:
+class SearchResult(BaseModel):
     source_path: str
     chunk_text: str
     score: float

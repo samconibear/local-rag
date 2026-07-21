@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "mcp-filesearch"
+name = "local-rag"
 version = "0.1.0"
-description = "A file-search MCP server — search by name, content, extension, or modification time"
+description = "mcp server for performing RAG locally"
 requires-python = ">=3.10"
 dependencies = [
     "mcp",
