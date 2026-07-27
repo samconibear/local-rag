@@ -1,10 +1,6 @@
-from __future__ import annotations
-
 from rag.models import EmbeddingChunk, ParsedChunk
 
-# Approximate token count as chars / 4
 _CHARS_PER_TOKEN = 4
-
 
 def chunk(
     parsed: list[ParsedChunk],

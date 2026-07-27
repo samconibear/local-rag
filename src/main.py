@@ -12,9 +12,10 @@ import sys
 from pathlib import Path
 
 import fs
-from rag import embedder, pipeline
+from rag.embedder import Embedder
+from rag.pipeline import Pipeline
 from rag.vector_store import FaissVectorStore
-from tools import mcp
+from tools import mcp, register_rag_tools
 
 
 def main() -> None:
@@ -37,15 +38,17 @@ def main() -> None:
     print(f"File search server rooted at: {fs.ROOT_DIR}", file=sys.stderr)
     print(f"Index directory: {args.index_dir}", file=sys.stderr)
 
-    embedder.init(args.embedding_model)
-
+    embedder = Embedder(args.embedding_model)
     store = FaissVectorStore(Path(args.index_dir))
-    pipeline.init(
+    pipeline = Pipeline(
         store=store,
+        embedder=embedder,
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
         exclude_patterns=exclude_patterns,
     )
+
+    register_rag_tools(pipeline, embedder)
     pipeline.start_reindex()
 
     mcp.run(transport="stdio")

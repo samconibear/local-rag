@@ -51,10 +51,6 @@ class FaissVectorStore:
         else:
             self._index = faiss.IndexIDMap(faiss.IndexFlatIP(dims))
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
     def upsert(
         self,
         chunks: list[EmbeddingChunk],
@@ -155,10 +151,6 @@ class FaissVectorStore:
             self._db.execute("DELETE FROM chunks")
             self._db.execute("DELETE FROM indexed_files")
             self._db.execute("DELETE FROM failed_files")
-
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
 
     def _delete_chunks_for_path(self, source_path: str) -> None:
         self._db.execute("DELETE FROM chunks WHERE source_path = ?", (source_path,))

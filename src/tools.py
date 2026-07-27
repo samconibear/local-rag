@@ -4,7 +4,6 @@ import time
 from mcp.server.fastmcp import FastMCP
 
 import fs
-from rag import embedder, pipeline
 
 mcp = FastMCP(
     "file-search",
@@ -214,58 +213,57 @@ def read_file(relative_path: str, max_chars: int = 5000) -> dict:
     }
 
 
-@mcp.tool()
-def semantic_search(
-    query: str,
-    k: int = 5,
-    min_score: float = 0.0,
-    file_glob: str = "*",
-    path_prefix: str = "",
-) -> list[dict]:
-    """
-    Search files by MEANING, not keywords. Use this when the user asks conceptual questions
-    like "find notes about project planning", "which files discuss authentication", or
-    "what did I write about the Q3 budget" — queries where exact word matches won't work.
-    Returns ranked chunks with the source file, score (0-1), and surrounding context.
-    Prefer search_content for exact keyword/substring searches; use this for semantic intent.
-    k controls how many results to return. min_score filters out weak matches (0.0 = all).
-    file_glob narrows to a file type (e.g. '*.md'). path_prefix narrows to a subdirectory.
-    """
-    query_vector = embedder.embed_one(query)
-    raw = pipeline._store.search(query_vector, k=k * 10) if pipeline._store else []
+def register_rag_tools(pipeline: "Pipeline", embedder: "Embedder"):
+    @mcp.tool()
+    def semantic_search(
+        query: str,
+        k: int = 5,
+        min_score: float = 0.0,
+        file_glob: str = "*",
+        path_prefix: str = "",
+    ) -> list[dict]:
+        """
+        Search files by MEANING, not keywords. Use this when the user asks conceptual questions
+        like "find notes about project planning", "which files discuss authentication", or
+        "what did I write about the Q3 budget" — queries where exact word matches won't work.
+        Returns ranked chunks with the source file, score (0-1), and surrounding context.
+        Prefer search_content for exact keyword/substring searches; use this for semantic intent.
+        k controls how many results to return. min_score filters out weak matches (0.0 = all).
+        file_glob narrows to a file type (e.g. '*.md'). path_prefix narrows to a subdirectory.
+        """
+        query_vector = embedder.embed_one(query)
+        raw = pipeline.search(query_vector, k=k * 10)
 
-    results = []
-    for r in raw:
-        if r.score < min_score:
-            continue
-        if file_glob != "*" and not fnmatch.fnmatch(r.source_path.split("/")[-1], file_glob):
-            continue
-        if path_prefix and not r.source_path.startswith(path_prefix):
-            continue
-        results.append(r.model_dump())
-        if len(results) >= k:
-            break
+        results = []
+        for r in raw:
+            if r.score < min_score:
+                continue
+            if file_glob != "*" and not fnmatch.fnmatch(r.source_path.split("/")[-1], file_glob):
+                continue
+            if path_prefix and not r.source_path.startswith(path_prefix):
+                continue
+            results.append(r.model_dump())
+            if len(results) >= k:
+                break
 
-    return results
+        return results
 
+    @mcp.tool()
+    def reindex() -> dict:
+        """
+        Trigger a fresh scan of the root directory and re-embed any new or changed files.
+        Use this after the user says they've added, edited, or deleted files and wants
+        semantic_search to reflect those changes. Runs in the background — call index_status
+        to check progress. Returns an error if a reindex is already running.
+        """
+        return pipeline.start_reindex()
 
-@mcp.tool()
-def reindex() -> dict:
-    """
-    Trigger a fresh scan of the root directory and re-embed any new or changed files.
-    Use this after the user says they've added, edited, or deleted files and wants
-    semantic_search to reflect those changes. Runs in the background — call index_status
-    to check progress. Returns an error if a reindex is already running.
-    """
-    return pipeline.start_reindex()
-
-
-@mcp.tool()
-def index_status() -> dict:
-    """
-    Check the current state of the background indexing job.
-    Returns how many files have been indexed, how many remain, any failures,
-    and when the last full index completed. Use this after calling reindex to
-    monitor progress, or to check if the index is up to date.
-    """
-    return pipeline.get_status()
+    @mcp.tool()
+    def index_status() -> dict:
+        """
+        Check the current state of the background indexing job.
+        Returns how many files have been indexed, how many remain, any failures,
+        and when the last full index completed. Use this after calling reindex to
+        monitor progress, or to check if the index is up to date.
+        """
+        return pipeline.get_status()
